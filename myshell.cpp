@@ -3,7 +3,6 @@
 //
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 #include <signal.h>
 #include <iostream>
 #include <vector>
@@ -17,7 +16,7 @@ int main(int argc, char *argv[])
     {
         std::cout << getcwd(NULL, 0) << "$ " << std::flush;
         std::string input;
-        std::getline(input);
+        std::getline(std::cin, input);
 
         if (input.compare("quit") == 0)
         {
