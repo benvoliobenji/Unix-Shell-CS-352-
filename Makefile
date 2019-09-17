@@ -7,7 +7,7 @@ CFLAGS = -Wall -Werror -ggdb -funroll-loops
 CXXFLAGS = -std=c++14 -Wall -g
 
 BIN = myshell
-OBJS = myshell.o
+OBJS = myshell.o date.o
 
 all: myshell.cpp
 	@$(ECHO) Compiling myshell

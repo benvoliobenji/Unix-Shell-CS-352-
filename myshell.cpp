@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <limits>
+#include "date.h"
 
 int main(int argc, char *argv[])
 {
@@ -39,6 +40,10 @@ int main(int argc, char *argv[])
             // A special command to clear the screen that works for Linux and Windows
             // Also avoids using system() calls
             std::cout << "\033[2J\033[1;1H";
+        }
+        else if (input.compare("date") == 0)
+        {
+            Date dateProcess = new Date();   
         }
     }
 

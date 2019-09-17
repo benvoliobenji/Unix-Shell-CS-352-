@@ -6,6 +6,14 @@
 #include <vector>
 #include <iostream>
 
+/**
+ * The abstract class to be used by most of the commands in the shell (outside of a few that directly affect the shell)
+ * Contains several methods that will be used to get and set information about each process as well as pure virtual function
+ * that will be overridden which will contain the instructions on how to execute that function.
+ * 
+ * This is done to allow for easy extendability and ease of programming for the execution of the processes in the shell.
+ *  
+ **/
 class Process
 {
     private:
@@ -14,8 +22,9 @@ class Process
         std::string command;
         std::vector<std::string> args;
 
+
     public:
-        virtual int execute() = 0;
+        virtual int32_t execute() = 0;
 
         int32_t setProcessID(pid_t const newPID)
         {
