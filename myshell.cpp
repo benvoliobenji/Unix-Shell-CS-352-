@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
         }
         else if (input.compare("pause") == 0)
         {
-            std::cout << "Press Enter to Continue: ";
+            std::cout << "Press ENTER to Continue: ";
             fgetc(stdin);
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         }
