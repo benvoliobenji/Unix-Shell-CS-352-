@@ -33,3 +33,6 @@
 
 # The IDEA configuration folders
 /.idea
+
+# The vscode config folder
+/.vscode
