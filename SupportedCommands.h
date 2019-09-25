@@ -2,4 +2,5 @@
 
 enum SupportedCommands
 {
+    date = 0
 };
