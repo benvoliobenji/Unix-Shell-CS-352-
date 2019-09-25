@@ -11,7 +11,7 @@ OBJS = myshell.o date.o
 
 all: myshell.cpp
 	@$(ECHO) Compiling myshell
-	g++ -std=c++14 -Wall -g myshell.cpp -o myshell
+	g++ -std=c++14 -Wall -g myshell.cpp date.cpp -o myshell
 
 clean:
 	@$(ECHO) Removing all generated files

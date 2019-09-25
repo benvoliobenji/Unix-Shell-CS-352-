@@ -14,5 +14,5 @@ class Date: public Process
             // TODO: Finish constructor
         }
 
-        int32_t execute() override;
+        int32_t execute(std::vector<std::string>& outputVector) override;
 };

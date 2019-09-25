@@ -24,7 +24,7 @@ class Process
 
 
     public:
-        virtual int32_t execute() = 0;
+        virtual int32_t execute(std::vector<std::string>& outputVector) = 0;
 
         int32_t setProcessID(pid_t const newPID)
         {

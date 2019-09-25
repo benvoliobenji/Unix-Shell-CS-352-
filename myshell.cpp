@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <signal.h>
 #include <iostream>
 #include <vector>
@@ -43,7 +44,30 @@ int main(int argc, char *argv[])
         }
         else if (input.compare("date") == 0)
         {
-            Date dateProcess = new Date();   
+            pid_t datePID = fork();
+
+            if (datePID == 0)
+            {
+                // Currently only treated as a foreground process, eventually add support for background process
+                // Also, do execlp? Problem is no direct vector support
+                int32_t jobNumber = 1;
+                Date dateProcess = Date(datePID, jobNumber);
+                std::vector<std::string> output;
+                int32_t result = dateProcess.execute(output);
+                if (result == 0)
+                {
+                    auto dateIterator = output.begin();
+                    for (; dateIterator != output.end(); ++dateIterator)
+                    {
+                        std::cout << *dateIterator << std::flush;
+                    }
+                    exit(0);
+                }
+            }
+            else 
+            {
+                wait(NULL);
+            }
         }
     }
 
