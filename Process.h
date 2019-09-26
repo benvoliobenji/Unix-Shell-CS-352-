@@ -18,15 +18,23 @@ class Process
 {
     private:
         pid_t pid;
-        int32_t jobNumber;
         std::string command;
         std::vector<std::string> args;
+        bool isBackground;
 
 
     public:
-        virtual int32_t execute(std::vector<std::string>& outputVector) = 0;
+        // TODO: Handle infile and outfile here also?
+        Process(pid_t const processID, std::string const processCommand, std::vector<std::string> const commandArguments,
+                bool const isBackgroundProcess)
+        {
+            pid = processID;
+            command = processCommand;
+            args = commandArguments;
+            isBackground = isBackgroundProcess;
+        }
 
-        int32_t setProcessID(pid_t const newPID)
+        int8_t setProcessID(pid_t const newPID)
         {
             if (newPID < 0)
             {
@@ -40,29 +48,17 @@ class Process
             }
         }
 
-        int32_t setJobNumber( int32_t const newJobNumber)
-        {
-            if (newJobNumber < 0)
-            {
-                std::cerr << "ERROR: Please provide a Job Number greater than 0" << std::endl << std::flush;
-                return -1;
-            }
-            else
-            {
-                jobNumber = newJobNumber;
-                return 0;
-            }
-        }
+        int8_t setCommand(std::string newCommand) { command = newCommand; return 0;};
 
-        int32_t setCommand(std::string newCommand) { command = newCommand; return 0;};
+        int8_t setArgs(std::vector<std::string> const newArgs) {args = newArgs; return 0; };
 
-        int32_t setArgs(std::vector<std::string> const newArgs) {args = newArgs; return 0; };
+        int8_t setBackground(bool const isBackgroundProcess) {isBackground = isBackgroundProcess; return 0; };
 
         const pid_t getProcessID() { return pid; };
-
-        const int32_t getJobNumber() { return jobNumber; };
 
         const std::string getCommand() { return command; };
 
         const std::vector<std::string> getArgs() { return args; };
+
+        const bool getBackground() { return isBackground; };
 };

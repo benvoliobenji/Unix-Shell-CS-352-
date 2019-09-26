@@ -12,7 +12,7 @@
 #include <limits>
 #include "date.h"
 
-#include<dirent.h>
+#include <dirent.h>
 
 int main(int argc, char *argv[])
 {
@@ -40,9 +40,6 @@ int main(int argc, char *argv[])
         }
         else if (input.compare("clr") == 0)
         {
-            // A special command to clear the screen that works for Linux and Windows
-            // Also avoids using system() calls
-            // std::cout << "\033[2J\033[1;1H";
             pid_t forkPID = fork();
 
             if (forkPID == 0)
