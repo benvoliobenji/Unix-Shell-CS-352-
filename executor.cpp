@@ -55,100 +55,8 @@ int8_t Executor::executeForegroundProcess(Process foregroundProcess)
     if (pid == 0)
     {
         // We are in the child process now
-
-        // TODO: Extract following code into helper function
-        // See if we have an input file to read from
-        if (foregroundProcess.getInputFile().size() > 0)
-        {
-            int file = open(foregroundProcess.getInputFile().c_str(), O_RDONLY);
-
-            // Check to make sure the file was opened properly
-            if (file < 0)
-            {
-                std::cerr << "\tERROR: Failed to open file: " + foregroundProcess.getInputFile() + " ABORTING..." << std::endl;
-                exit(-1);
-            } 
-
-            else
-            {
-                // Change our stdin to the file
-                dup2(file, STDIN_FILENO);
-
-                // Close the file
-                close(file);
-            }
-            
-        }
-
-        // Now check if there is an output file
-        if (foregroundProcess.getOuptutFile().size() > 0)
-        {
-            // TODO: Change for depending on truncation or appending
-            int file = open(foregroundProcess.getOuptutFile().c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-
-            // Check to make sure the file was opened properly
-            if (file < 0)
-            {
-                std::cerr << "\tERROR: Failed to open file: " + foregroundProcess.getInputFile() + " ABORTING..." << std::endl;
-                exit(-1);
-            }
-
-            else
-            {
-                // Change the stdout to this file
-                dup2(file, STDOUT_FILENO);
-
-                // Close the file
-                close(file);
-            } 
-        }
-
-        // Now we execute the process
-        if (foregroundProcess.getCommand().compare("cd") == 0)
-        {
-            // TODO: Handle cd command
-        }
-        else if (foregroundProcess.getCommand().compare("clr") == 0)
-        {
-            execlp("clear", "clear", NULL);
-        }
-        else if (foregroundProcess.getCommand().compare("dir") == 0)
-        {
-            // TODO: Handle dir command
-        }
-        else if (foregroundProcess.getCommand().compare("environ") == 0)
-        {
-            // TODO: Handle environ command
-        }
-        else if (foregroundProcess.getCommand().compare("echo") == 0)
-        {
-            // TODO: Handle echo command
-        }
-        else if (foregroundProcess.getCommand().compare("help") == 0)
-        {
-            // TODO: Handle help command
-        }
-        else
-        {
-            std::vector<std::string> args = foregroundProcess.getArgs();
-            std::vector<char*> cstrings{};
-
-            // Make sure to push back the command first
-            char* command = new char[foregroundProcess.getCommand().size() + 1];
-            std::copy(foregroundProcess.getCommand().begin(), foregroundProcess.getCommand().end(), command);
-            cstrings.push_back(command);
-            
-            // Needed for a conversion from a vector of strings to a char** for execvp
-            for(auto& string: args)
-            {
-                cstrings.push_back(&string.front());
-            }
-
-            // Execute the process
-            execvp(foregroundProcess.getCommand().c_str(), cstrings.data());   
-        }
-
-        exit(0);
+       int8_t result = executeProcess(foregroundProcess);
+        exit(result);
     }
 
     else
@@ -170,6 +78,135 @@ int8_t Executor::executeForegroundProcess(Process foregroundProcess)
 
 int8_t Executor::executeBackgroundProcess(Process backgroundProcess)
 {
-    // TODO: Add background process implementation
+    pid_t pid = fork();
+
+    // Check to make sure the process was correctly forked
+    if (pid < 0)
+    {
+        std::cerr << "\tERROR: Failed to create new process" << std::endl;
+        return -1;
+    }
+
+    if (pid == 0)
+    {
+        // This is the child process
+        int8_t result = executeProcess(backgroundProcess);
+        exit(result);
+    }
+
+    else
+    {
+        // Since this is a background process, just exit
+        return 0;
+    }
+}
+
+int8_t Executor::executeProcess(Process process)
+{
+    // First we handle any changes to the I/O
+    int result = 0;
+    result = handleIO(process);
+
+    if (result != 0)
+    {
+        exit(result);
+    }
+
+    // Now we execute the process
+    if (process.getCommand().compare("cd") == 0)
+    {
+        // TODO: Handle cd command
+    }
+    else if (process.getCommand().compare("clr") == 0)
+    {
+        execlp("clear", "clear", NULL);
+    }
+    else if (process.getCommand().compare("dir") == 0)
+    {
+        // TODO: Handle dir command
+    }
+    else if (process.getCommand().compare("environ") == 0)
+    {
+        // TODO: Handle environ command
+    }
+    else if (process.getCommand().compare("echo") == 0)
+    {
+        // TODO: Handle echo command
+    }
+    else if (process.getCommand().compare("help") == 0)
+    {
+        // TODO: Handle help command
+    }
+    else
+    {
+        std::vector<std::string> args = process.getArgs();
+        std::vector<char*> cstrings{};
+
+        // Make sure to push back the command first
+        char* command = new char[process.getCommand().size() + 1];
+        std::copy(process.getCommand().begin(), process.getCommand().end(), command);
+        cstrings.push_back(command);
+        
+        // Needed for a conversion from a vector of strings to a char** for execvp
+        for(auto& string: args)
+        {
+            cstrings.push_back(&string.front());
+        }
+
+        // Execute the process
+        execvp(process.getCommand().c_str(), cstrings.data());   
+    }
+
+    return 0;
+}
+
+int8_t Executor::handleIO(Process process)
+{
+    // See if we have an input file to read from
+    if (process.getInputFile().size() > 0)
+    {
+        int file = open(process.getInputFile().c_str(), O_RDONLY);
+
+        // Check to make sure the file was opened properly
+        if (file < 0)
+        {
+            std::cerr << "\tERROR: Failed to open file: " + process.getInputFile() + " ABORTING..." << std::endl;
+            return -1;
+        } 
+
+        else
+        {
+            // Change our stdin to the file
+            dup2(file, STDIN_FILENO);
+
+            // Close the file
+            close(file);
+        }
+        
+    }
+
+    // Now check if there is an output file
+    if (process.getOuptutFile().size() > 0)
+    {
+        // TODO: Change for depending on truncation or appending
+        int file = open(process.getOuptutFile().c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+
+        // Check to make sure the file was opened properly
+        if (file < 0)
+        {
+            std::cerr << "\tERROR: Failed to open file: " + process.getInputFile() + " ABORTING..." << std::endl;
+            return -1;
+        }
+
+        else
+        {
+            // Change the stdout to this file
+            dup2(file, STDOUT_FILENO);
+
+            // Close the file
+            close(file);
+        } 
+    }
+
     return 0;
 }
