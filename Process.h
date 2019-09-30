@@ -21,6 +21,8 @@ class Process
         std::string command;
         std::vector<std::string> args;
         bool isBackground;
+        std::string inputFile = "";
+        std::string outputFile = "";
 
 
     public:
@@ -48,17 +50,25 @@ class Process
             }
         }
 
-        int8_t setCommand(std::string newCommand) { command = newCommand; return 0;};
+        int8_t setCommand(std::string newCommand) { command = newCommand; return 0;}
 
-        int8_t setArgs(std::vector<std::string> const newArgs) {args = newArgs; return 0; };
+        int8_t setArgs(std::vector<std::string> const newArgs) { args = newArgs; return 0; }
 
-        int8_t setBackground(bool const isBackgroundProcess) {isBackground = isBackgroundProcess; return 0; };
+        int8_t setBackground(bool const isBackgroundProcess) { isBackground = isBackgroundProcess; return 0; }
 
-        const pid_t getProcessID() { return pid; };
+        int8_t setInputFile(std::string const newInputFile) { inputFile = newInputFile; return 0; }
 
-        const std::string getCommand() { return command; };
+        int8_t setOutputFile(std::string const newOutputFile) { outputFile = newOutputFile; return 0; }
 
-        const std::vector<std::string> getArgs() { return args; };
+        const pid_t getProcessID() { return pid; }
 
-        const bool getBackground() { return isBackground; };
+        const std::string getCommand() { return command; }
+
+        const std::vector<std::string> getArgs() { return args; }
+
+        const bool getBackground() { return isBackground; }
+
+        const std::string getInputFile() { return inputFile; }
+
+        const std::string getOuptutFile() { return outputFile; }
 };

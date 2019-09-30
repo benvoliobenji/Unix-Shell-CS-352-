@@ -10,7 +10,7 @@
 #include <vector>
 #include <string>
 #include <limits>
-#include "date.h"
+#include "executor.h"
 
 #include <dirent.h>
 
@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
     // Clear the screen before printing out the program
     // TODO: Place this in a separate function
     std::cout << "\033[2J\033[1;1H";
+    Executor executor = Executor();
 
     while (isRunning)
     {
@@ -38,92 +39,101 @@ int main(int argc, char *argv[])
             fgetc(stdin);
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         }
-        else if (input.compare("clr") == 0)
+        else
         {
-            pid_t forkPID = fork();
+            std::vector<Process> processVector;
+            std::vector<std::string> args = {};
+            Process newProcess = Process(getpid(), input, args, false);
 
-            if (forkPID == 0)
-            {
-                execlp("clear", "clear", NULL);
-                return 0;
-            }
-            else
-            {
-                int status = 0;
-                waitpid(forkPID, &status, 0);
-            }
-            
+            processVector.push_back(newProcess);
+            executor.executeBatchProcess(processVector);
         }
-        else if (input.compare("date") == 0)
-        {
-            pid_t datePID = fork();
+        
+        // else if (input.compare("clr") == 0)
+        // {
+        //     pid_t forkPID = fork();
 
-            if (datePID == 0)
-            {
-                // Currently only treated as a foreground process, eventually add support for background process
-                // Also, do execlp? Problem is no direct vector support
-                // int32_t jobNumber = 1;
-                // Date dateProcess = Date(datePID, jobNumber);
-                // std::vector<std::string> output;
-                // int32_t result = dateProcess.execute(output);
-                // if (result == 0)
-                // {
-                //     auto dateIterator = output.begin();
-                //     for (; dateIterator != output.end(); ++dateIterator)
-                //     {
-                //         std::cout << *dateIterator << std::flush;
-                //     }
-                //     std::cout << std::endl;
-                //     return 0;
-                // }
-                execlp("date", "date", 0);
-            }
-            else 
-            {
-                int status = 0;
-                waitpid(datePID, &status, 0);
-            }
-        }
-        else if (input.compare("cal") == 0)
-        {
-            pid_t calPID = fork();
+        //     if (forkPID == 0)
+        //     {
+        //         execlp("clear", "clear", NULL);
+        //         return 0;
+        //     }
+        //     else
+        //     {
+        //         int status = 0;
+        //         waitpid(forkPID, &status, 0);
+        //     }
             
-            if (calPID == 0)
-            {
-                execlp("cal", "cal", NULL);
-                return 0;
-            }
-            else
-            {
-                int status = 0;
-                waitpid(calPID, &status, 0);
-            }      
-        }
-        else if (input.compare("ls") == 0)
-        {
-            pid_t lsPID = fork();
-            if (lsPID == 0)
-            {
-                // DIR *dir;
-                // dirent *pdir;
-                // dir = opendir(".");
-                // while(readdir(dir))
-                // {
-                //     pdir = readdir(dir);
-                //     std::cout << pdir->d_name << "\t";
-                // }
-                // closedir(dir);
-                // return 0;
-                execlp("ls", "ls", NULL);
-                return 0;
-            }
-            else
-            {
-                int status = 0;
-                waitpid(lsPID, &status, 0);
-            }
+        // }
+        // else if (input.compare("date") == 0)
+        // {
+        //     pid_t datePID = fork();
+
+        //     if (datePID == 0)
+        //     {
+        //         // Currently only treated as a foreground process, eventually add support for background process
+        //         // Also, do execlp? Problem is no direct vector support
+        //         // int32_t jobNumber = 1;
+        //         // Date dateProcess = Date(datePID, jobNumber);
+        //         // std::vector<std::string> output;
+        //         // int32_t result = dateProcess.execute(output);
+        //         // if (result == 0)
+        //         // {
+        //         //     auto dateIterator = output.begin();
+        //         //     for (; dateIterator != output.end(); ++dateIterator)
+        //         //     {
+        //         //         std::cout << *dateIterator << std::flush;
+        //         //     }
+        //         //     std::cout << std::endl;
+        //         //     return 0;
+        //         // }
+        //         execlp("date", "date", 0);
+        //     }
+        //     else 
+        //     {
+        //         int status = 0;
+        //         waitpid(datePID, &status, 0);
+        //     }
+        // }
+        // else if (input.compare("cal") == 0)
+        // {
+        //     pid_t calPID = fork();
             
-        }
+        //     if (calPID == 0)
+        //     {
+        //         execlp("cal", "cal", NULL);
+        //         return 0;
+        //     }
+        //     else
+        //     {
+        //         int status = 0;
+        //         waitpid(calPID, &status, 0);
+        //     }      
+        // }
+        // else if (input.compare("ls") == 0)
+        // {
+        //     pid_t lsPID = fork();
+        //     if (lsPID == 0)
+        //     {
+        //         // DIR *dir;
+        //         // dirent *pdir;
+        //         // dir = opendir(".");
+        //         // while(readdir(dir))
+        //         // {
+        //         //     pdir = readdir(dir);
+        //         //     std::cout << pdir->d_name << "\t";
+        //         // }
+        //         // closedir(dir);
+        //         // return 0;
+        //         execlp("ls", "ls", NULL);
+        //         return 0;
+        //     }
+        //     else
+        //     {
+        //         int status = 0;
+        //         waitpid(lsPID, &status, 0);
+        //     }
+        // }
     }
 
     // Clear the screen before exiting the program

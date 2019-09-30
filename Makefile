@@ -7,11 +7,11 @@ CFLAGS = -Wall -Werror -ggdb -funroll-loops
 CXXFLAGS = -std=c++14 -Wall -g
 
 BIN = myshell
-OBJS = myshell.o date.o
+OBJS = myshell.o executor.o
 
 all: myshell.cpp
 	@$(ECHO) Compiling myshell
-	g++ -std=c++14 -Wall -g myshell.cpp date.cpp -o myshell
+	g++ -std=c++14 -Wall -g myshell.cpp executor.cpp -o myshell
 
 clean:
 	@$(ECHO) Removing all generated files
