@@ -1,3 +1,4 @@
+#include <cstring>
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -109,13 +110,41 @@ int8_t Executor::executeProcess(Process process)
 
     if (result != 0)
     {
-        exit(result);
+        return result;
     }
 
     // Now we execute the process
     if (process.getCommand().compare("cd") == 0)
     {
-        // TODO: Handle cd command
+        std::vector<std::string> args = process.getArgs();
+        // Since we know it's only one argument which is the path to change the directory to,
+        // we can just grab that sole argument
+
+        if (args.size() == 0)
+        {
+            // We didn't have any arguments, so just print out the current directory
+            char* directory = (char*) malloc(256);
+            getcwd(directory, 256);
+            std::cout << directory << std::endl;
+            return 0;
+        }
+
+
+        int result = chdir(args[0].c_str());
+
+        if (result < 0)
+        {
+            // We could not change the directory, so throw an error
+            std::cerr << "\tERROR: No such file or directory" << std::endl;
+        }
+        else
+        {
+            // Changing directory was successful, print new directory
+            char* newDirectory = (char*) malloc(256);
+            getcwd(newDirectory, 256);
+            std::cout << newDirectory << std::endl;
+        }
+        
     }
     else if (process.getCommand().compare("clr") == 0)
     {
@@ -123,28 +152,53 @@ int8_t Executor::executeProcess(Process process)
     }
     else if (process.getCommand().compare("dir") == 0)
     {
-        // TODO: Handle dir command
-    }
-    else if (process.getCommand().compare("environ") == 0)
-    {
-        // TODO: Handle environ command
-    }
-    else if (process.getCommand().compare("echo") == 0)
-    {
-        // TODO: Handle echo command
-    }
-    else if (process.getCommand().compare("help") == 0)
-    {
-        // TODO: Handle help command
-    }
-    else
-    {
         std::vector<std::string> args = process.getArgs();
         std::vector<char*> cstrings{};
 
         // Make sure to push back the command first
+        // This is specifically ls because of how linux works instead
+
+        char* command = (char *)"ls";
+        cstrings.push_back(command);
+        
+        // Needed for a conversion from a vector of strings to a char** for execvp
+        for(auto& string: args)
+        {
+            cstrings.push_back(&string.front());
+        }
+
+        execvp("ls", cstrings.data());
+    }
+    else if (process.getCommand().compare("environ") == 0)
+    {
+        execlp("printenv", "printenv", NULL);
+    }
+    // else if (process.getCommand().compare("echo") == 0)
+    // {
+    //     // TODO: Handle echo command
+    // }
+    else if (process.getCommand().compare("help") == 0)
+    {
+        // TODO: Change format to work with piping
+        execlp("help", "help", NULL);
+    }
+    else
+    {
+        std::vector<std::string> args = process.getArgs();
+
+        if (args.size() == 0)
+        {
+            // No need to go through all the copying process if it's just a solo command with no args
+            execlp(process.getCommand().c_str(), process.getCommand().c_str(), NULL);
+        }
+
+        std::vector<char*> cstrings{};
+        // Make sure to push back the command first
         char* command = new char[process.getCommand().size() + 1];
         std::copy(process.getCommand().begin(), process.getCommand().end(), command);
+
+        // strcpy(command, process.getCommand().c_str());
+
         cstrings.push_back(command);
         
         // Needed for a conversion from a vector of strings to a char** for execvp
@@ -157,6 +211,8 @@ int8_t Executor::executeProcess(Process process)
         execvp(process.getCommand().c_str(), cstrings.data());   
     }
 
+    // Just to add some space between commands and returns
+    std::cout << std::endl;
     return 0;
 }
 
