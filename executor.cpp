@@ -207,12 +207,13 @@ int8_t Executor::executeProcess(Process process)
             cstrings.push_back(&string.front());
         }
 
+        // Make sure we push back a NULL to satisfy arguments for the linux comands
+        cstrings.push_back(NULL);
+
         // Execute the process
         execvp(process.getCommand().c_str(), cstrings.data());   
     }
 
-    // Just to add some space between commands and returns
-    std::cout << std::endl;
     return 0;
 }
 
