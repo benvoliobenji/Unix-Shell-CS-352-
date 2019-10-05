@@ -1,0 +1,6 @@
+ls -l
+ps &;cal;date
+who 
+dir /
+echo hello from the file
+environ

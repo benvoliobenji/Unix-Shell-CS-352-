@@ -55,9 +55,7 @@ std::vector<std::string> Parser::parsePipedProcesses(std::string independentProc
 
     while (std::getline(ss, token, '|'))
     {
-        std::cout << token << std::endl;
         token = trim(token);
-        std::cout << token << std::endl;
         pipedProcessStringVector.push_back(token);
     }
 

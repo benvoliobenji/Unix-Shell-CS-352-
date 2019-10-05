@@ -28,7 +28,40 @@ int8_t Executor::executeBatchProcess(std::vector<std::vector<Process>> newProces
         else
         {
             Process individualProcess = (*processVectorIterator)[0];
-            if (individualProcess.getBackground() == false)
+            if (individualProcess.getCommand().compare("cd") == 0)
+            {
+                std::vector<std::string> args = individualProcess.getArgs();
+                // Since we know it's only one argument which is the path to change the directory to,
+                // we can just grab that sole argument
+
+                if (args.size() == 1)
+                {
+                    // We didn't have any arguments, so just print out the current directory
+                    char* directory = (char*) malloc(256);
+                    getcwd(directory, 256);
+                    std::cout << directory << std::endl;
+                    return 0;
+                }
+
+
+                int result = chdir(args[1].c_str());
+
+                if (result < 0)
+                {
+                    // We could not change the directory, so throw an error
+                    perror("Directory");
+                    processResult = -1;
+                }
+                else
+                {
+                    // Changing directory was successful, print new directory
+                    char* newDirectory = (char*) malloc(256);
+                    getcwd(newDirectory, 256);
+                    std::cout << newDirectory << std::endl;
+                    processResult = 0;
+                }
+            }
+            else if (individualProcess.getBackground() == false)
             {
                 // This means we have a foreground process
                 processResult = executeForegroundProcess(individualProcess);
@@ -37,8 +70,7 @@ int8_t Executor::executeBatchProcess(std::vector<std::vector<Process>> newProces
             {
                 // This is a background process
                 processResult = executeBackgroundProcess(individualProcess);
-            }
-            
+            }  
         }
 
         if (processResult != 0)
@@ -54,11 +86,6 @@ int8_t Executor::executeBatchProcess(std::vector<std::vector<Process>> newProces
 
 int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
 {
-    for(auto pipeIterator = pipedProcesses.begin(); pipeIterator != pipedProcesses.end(); ++pipeIterator)
-    {
-        std::cout << (*pipeIterator).getCommand() << std::endl;
-    }
-
     int numPipes = (pipedProcesses.size() - 1);
 
     int status;
@@ -132,8 +159,6 @@ int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
 
             // Make sure we push back a NULL to satisfy arguments for the linux comands
             cstrings.push_back(NULL);
-
-            std::cout << pipedProcesses[processes].getCommand() << std::endl;
 
             // Execvp the process
             if (execvp(pipedProcesses[processes].getCommand().c_str(), cstrings.data()) < 0)
@@ -240,39 +265,7 @@ int8_t Executor::executeProcess(Process process)
     }
 
     // Now we execute the process
-    if (process.getCommand().compare("cd") == 0)
-    {
-        std::vector<std::string> args = process.getArgs();
-        // Since we know it's only one argument which is the path to change the directory to,
-        // we can just grab that sole argument
-
-        if (args.size() == 0)
-        {
-            // We didn't have any arguments, so just print out the current directory
-            char* directory = (char*) malloc(256);
-            getcwd(directory, 256);
-            std::cout << directory << std::endl;
-            return 0;
-        }
-
-
-        int result = chdir(args[0].c_str());
-
-        if (result < 0)
-        {
-            // We could not change the directory, so throw an error
-            perror("Directory");
-        }
-        else
-        {
-            // Changing directory was successful, print new directory
-            char* newDirectory = (char*) malloc(256);
-            getcwd(newDirectory, 256);
-            std::cout << newDirectory << std::endl;
-        }
-        
-    }
-    else if (process.getCommand().compare("clr") == 0)
+    if (process.getCommand().compare("clr") == 0)
     {
         execlp("clear", "clear", NULL);
     }
@@ -303,11 +296,20 @@ int8_t Executor::executeProcess(Process process)
     {
         execlp("printenv", "printenv", NULL);
     }
-    // else if (process.getCommand().compare("help") == 0)
-    // {
-    //     // TODO: Change format to work with piping
-    //     execlp("help", "help", NULL);
-    // }
+    else if (process.getCommand().compare("help") == 0)
+    {
+        std::vector<Process> helpCommand;
+        std::vector<std::string> helpArgs = {"help"};
+        Process helpProcess(getpid(), "help", helpArgs, false);
+
+        std::vector<std::string> moreArgs = {"more"};
+        Process moreProcess(getpid(), "more", moreArgs, false);
+
+        helpCommand.push_back(helpProcess);
+        helpCommand.push_back(moreProcess);
+
+        executePipedProcesses(helpCommand);
+    }
     else
     {
         std::vector<std::string> args = process.getArgs();
@@ -364,8 +366,9 @@ int8_t Executor::handleIO(Process process)
     if (process.getOuptutFile().size() > 0)
     {
         int file;
+
         // Change the parameters when opening the file depending on if it's truncate or append
-        if (process.getOutputFileTruncated)
+        if (process.getOutputFileTruncated())
         {
             file = open(process.getOuptutFile().c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
         }

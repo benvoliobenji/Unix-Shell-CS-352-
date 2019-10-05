@@ -37,8 +37,6 @@ int main(int argc, char *argv[])
             else if (input.compare("pause") == 0)
             {
                 std::cout << "Press ENTER to Continue: ";
-                // fgetc(stdin);
-                // std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 std::getline(std::cin, input);
             }
             else
@@ -50,8 +48,15 @@ int main(int argc, char *argv[])
     }
     else if (argc == 2)
     {
-        std::ifstream file(argv[0]);
+        std::ifstream file;
+        file.open(argv[1]);
         std::string line;
+        if (!file.is_open())
+        {
+            perror("Error opening file");
+            return -1;
+        }
+
         while (std::getline(file, line))
         {
             if (line.compare("quit") == 0)
@@ -67,5 +72,5 @@ int main(int argc, char *argv[])
     }
 
     // Clear the screen before exiting the program
-    std::cout << "\033[2J\033[1;1H";
+    // std::cout << "\033[2J\033[1;1H";
 }

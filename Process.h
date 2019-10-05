@@ -27,7 +27,6 @@ class Process
 
 
     public:
-        // TODO: Handle infile and outfile here also?
         Process(pid_t const processID, std::string const processCommand, std::vector<std::string> const commandArguments,
                 bool const isBackgroundProcess)
         {
