@@ -54,6 +54,11 @@ int8_t Executor::executeBatchProcess(std::vector<std::vector<Process>> newProces
 
 int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
 {
+    for(auto pipeIterator = pipedProcesses.begin(); pipeIterator != pipedProcesses.end(); ++pipeIterator)
+    {
+        std::cout << (*pipeIterator).getCommand() << std::endl;
+    }
+
     int numPipes = (pipedProcesses.size() - 1);
 
     int status;
@@ -72,37 +77,38 @@ int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
     }
 
     int j = 0;
-    for(int processes = 0; processes < pipedProcesses.size(); processes++)
+    std::vector<pid_t> child_pids;
+    for(size_t processes = 0; processes < pipedProcesses.size(); processes++)
     {
         pid = fork();
         if (pid == 0)
         {
-            if (processes == 0)
-            {
-                // Handle file input for the first process
-                handleIO(pipedProcesses[0]);
-            }
-
-            // Check to see if this is the last piped process or not
-            if (processes < pipedProcesses.size() - 1)
-            {
-                if (dup2(pipefds[j + 1], 0) < 0)
-                {
-                    perror("Error with dup2");
-                    exit(EXIT_FAILURE);
-                }
-            }
-
             if (processes == pipedProcesses.size() - 1)
             {
                 // Handle file output for the final process
                 handleIO(pipedProcesses[processes]);
             }
 
+            if (processes == 0)
+            {
+                // Handle file input for the first process
+                handleIO(pipedProcesses[0]);
+            }
+
             // If this isn't the first command and j != 2 * numPipes
             if (j != 0)
             {
-                if (dup2(pipefds[j - 2], 0) < 0)
+                if (dup2(pipefds[(j - 1) * 2], STDIN_FILENO) < 0)
+                {
+                    perror("Error with dup2");
+                    exit(EXIT_FAILURE);
+                }
+            }
+
+            // Check to see if this is the last piped process or not
+            if (processes < pipedProcesses.size() - 1)
+            {
+                if (dup2(pipefds[(j * 2) + 1], STDOUT_FILENO) < 0)
                 {
                     perror("Error with dup2");
                     exit(EXIT_FAILURE);
@@ -127,6 +133,8 @@ int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
             // Make sure we push back a NULL to satisfy arguments for the linux comands
             cstrings.push_back(NULL);
 
+            std::cout << pipedProcesses[processes].getCommand() << std::endl;
+
             // Execvp the process
             if (execvp(pipedProcesses[processes].getCommand().c_str(), cstrings.data()) < 0)
             {
@@ -139,8 +147,12 @@ int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
             perror("Error forking");
             return -1;
         }
+        else if (pid > 0)
+        {
+            child_pids.push_back(pid);
+        }
 
-        j += 2;
+        j++;
     }
 
     for(i = 0; i < 2 * numPipes; i++)
@@ -148,11 +160,13 @@ int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
         close(pipefds[i]);
     }
 
-    for(i = 0; i < numPipes + 1; i++)
+    for(auto childPIDIterator = child_pids.begin(); childPIDIterator != child_pids.end(); ++childPIDIterator)
     {
-        wait(&status);
+        waitpid(*childPIDIterator, &status, 0);
         return 0;
     }
+
+    return 0;
 }
 
 int8_t Executor::executeForegroundProcess(Process foregroundProcess)
@@ -162,7 +176,7 @@ int8_t Executor::executeForegroundProcess(Process foregroundProcess)
     // Check to make sure the process was correctly forked
     if (pid < 0)
     {
-        std::cerr << "\tERROR: Failed to create new process" << std::endl;
+        perror("Forking");
         return -1;
     }
 
@@ -180,7 +194,7 @@ int8_t Executor::executeForegroundProcess(Process foregroundProcess)
 
         if (status != 0)
         {
-            std::cerr << "\tERROR: Child process produced an error" << std::endl;
+            perror("Child Process");
             return -1;
         }
         else
@@ -197,7 +211,7 @@ int8_t Executor::executeBackgroundProcess(Process backgroundProcess)
     // Check to make sure the process was correctly forked
     if (pid < 0)
     {
-        std::cerr << "\tERROR: Failed to create new process" << std::endl;
+        perror("Forking");
         return -1;
     }
 
@@ -248,7 +262,7 @@ int8_t Executor::executeProcess(Process process)
         if (result < 0)
         {
             // We could not change the directory, so throw an error
-            std::cerr << "\tERROR: No such file or directory" << std::endl;
+            perror("Directory");
         }
         else
         {
@@ -277,6 +291,10 @@ int8_t Executor::executeProcess(Process process)
         // Needed for a conversion from a vector of strings to a char** for execvp
         for(auto& string: args)
         {
+            if (string.compare("dir") == 0)
+            {
+                continue;
+            }
             cstrings.push_back(&string.front());
         }
 
@@ -286,15 +304,11 @@ int8_t Executor::executeProcess(Process process)
     {
         execlp("printenv", "printenv", NULL);
     }
-    // else if (process.getCommand().compare("echo") == 0)
+    // else if (process.getCommand().compare("help") == 0)
     // {
-    //     // TODO: Handle echo command
+    //     // TODO: Change format to work with piping
+    //     execlp("help", "help", NULL);
     // }
-    else if (process.getCommand().compare("help") == 0)
-    {
-        // TODO: Change format to work with piping
-        execlp("help", "help", NULL);
-    }
     else
     {
         std::vector<std::string> args = process.getArgs();
@@ -305,16 +319,8 @@ int8_t Executor::executeProcess(Process process)
             execlp(process.getCommand().c_str(), process.getCommand().c_str(), NULL);
         }
 
+        // Copy the arguments into a char *
         std::vector<char*> cstrings{};
-        // // Make sure to push back the command first
-        // char* command = new char[process.getCommand().size() + 1];
-        // std::copy(process.getCommand().begin(), process.getCommand().end(), command);
-
-        // strcpy(command, process.getCommand().c_str());
-
-        // cstrings.push_back(command);
-        
-        // Needed for a conversion from a vector of strings to a char** for execvp
         for(auto& string: args)
         {
             cstrings.push_back(&string.front());
@@ -340,7 +346,7 @@ int8_t Executor::handleIO(Process process)
         // Check to make sure the file was opened properly
         if (file < 0)
         {
-            std::cerr << "\tERROR: Failed to open file: " + process.getInputFile() + " ABORTING..." << std::endl;
+            perror("Opening input file");
             return -1;
         } 
 
@@ -364,7 +370,7 @@ int8_t Executor::handleIO(Process process)
         // Check to make sure the file was opened properly
         if (file < 0)
         {
-            std::cerr << "\tERROR: Failed to open file: " + process.getInputFile() + " ABORTING..." << std::endl;
+            perror("Opening output file");
             return -1;
         }
 

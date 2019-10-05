@@ -1,6 +1,7 @@
 #include <sstream>
 #include <iostream>
 #include <unistd.h>
+#include "trim.h"
 #include "parser.h"
 
 std::vector<std::vector<Process>> Parser::parseInput(std::string inputLine)
@@ -38,6 +39,7 @@ std::vector<std::string> Parser::parseIndependentProcesses(std::string inputLine
 
     while (std::getline(ss, token, ';'))
     {
+        token = trim(token);
         independentProcessStringVector.push_back(token);
     }
 
@@ -53,6 +55,9 @@ std::vector<std::string> Parser::parsePipedProcesses(std::string independentProc
 
     while (std::getline(ss, token, '|'))
     {
+        std::cout << token << std::endl;
+        token = trim(token);
+        std::cout << token << std::endl;
         pipedProcessStringVector.push_back(token);
     }
 
