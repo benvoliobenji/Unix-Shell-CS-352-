@@ -14,8 +14,8 @@ class Parser
     private:
         std::vector<std::string> parseIndependentProcesses(std::string inputLine);
 
-        std::vector<Process> parsePipedProcesses(std::string independentProcess);
-        
+        std::vector<std::string> parsePipedProcesses(std::string independentProcess);
+
         Process parseArguments(std::string processArgs);
 
 

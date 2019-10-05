@@ -35,13 +35,48 @@ std::vector<std::string> Parser::parseIndependentProcesses(std::string inputLine
 
     std::string token;
 
-    // This is the ASCII character representation for ";" since ";" is a char[2]
-    char delim = putchar(59);
-
-    while (std::getline(ss, token, delim))
+    while (std::getline(ss, token, ';'))
     {
         independentProcessStringVector.push_back(token);
     }
 
     return independentProcessStringVector;
+}
+
+std::vector<std::string> Parser::parsePipedProcesses(std::string independentProcess)
+{
+    std::stringstream ss(independentProcess);
+    std::vector<std::string> pipedProcessStringVector;
+
+    std::string token;
+
+    while (std::getline(ss, token, '|'))
+    {
+        pipedProcessStringVector.push_back(token);
+    }
+
+    return pipedProcessStringVector;
+}
+
+Process Parser::parseArguments(std::string processArgs)
+{
+    std::stringstream ss(processArgs);
+    std::vector<std::string> argVector;
+    std::string token;
+
+    while (std::getline(ss, token, ' '))
+    {
+        argVector.push_back(token);
+    }
+
+    std::string command = argVector[0];
+
+    for(auto argVectorIterator = argVector.begin(); argVectorIterator != argVector.end(); ++argVectorIterator)
+    {
+        std::string arg = *argVectorIterator;
+        if(arg.compare(" ") == 0)
+        {
+            continue;
+        }
+    }
 }
