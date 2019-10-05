@@ -77,6 +77,12 @@ int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
         pid = fork();
         if (pid == 0)
         {
+            if (processes == 0)
+            {
+                // Handle file input for the first process
+                handleIO(pipedProcesses[0]);
+            }
+
             // Check to see if this is the last piped process or not
             if (processes < pipedProcesses.size() - 1)
             {
@@ -85,6 +91,12 @@ int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
                     perror("Error with dup2");
                     exit(EXIT_FAILURE);
                 }
+            }
+
+            if (processes == pipedProcesses.size() - 1)
+            {
+                // Handle file output for the final process
+                handleIO(pipedProcesses[processes]);
             }
 
             // If this isn't the first command and j != 2 * numPipes
@@ -99,9 +111,11 @@ int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
 
             for(i = 0; i < 2*numPipes; i++)
             {
+                // Close the pipes
                 close(pipefds[i]);
             }
-            
+
+            // Convert the args to a char*
             std::vector<std::string> args = pipedProcesses[processes].getArgs();
             std::vector<char*> cstrings{};
             
@@ -113,6 +127,7 @@ int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
             // Make sure we push back a NULL to satisfy arguments for the linux comands
             cstrings.push_back(NULL);
 
+            // Execvp the process
             if (execvp(pipedProcesses[processes].getCommand().c_str(), cstrings.data()) < 0)
             {
                 perror("Error with execvp");
