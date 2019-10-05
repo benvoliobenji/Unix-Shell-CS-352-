@@ -8,9 +8,11 @@
 class Executor
 {
     public:
-        int8_t executeBatchProcess(std::vector<Process> newProcessVector);
+        int8_t executeBatchProcess(std::vector<std::vector<Process>> newProcessVector);
 
     private:
+        int8_t executePipedProcesses(std::vector<Process> pipedProcesses);
+
         int8_t executeForegroundProcess(Process foregroundProcess);
         int8_t executeBackgroundProcess(Process backgroundProcess);
 

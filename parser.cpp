@@ -80,6 +80,7 @@ Process Parser::parseArguments(std::string processArgs)
     std::string inputFile = "";
     std::string outputFile = "";
     bool hasInputFileArg = false;
+    bool hasOutputFileArg = false;
     bool isTruncated = true;
 
     for(auto argVectorIterator = argVector.begin(); argVectorIterator != argVector.end(); ++argVectorIterator)
@@ -99,18 +100,29 @@ Process Parser::parseArguments(std::string processArgs)
         {
             // This means the output file must be appended, not truncated
             isTruncated = false;
+            hasOutputFileArg = true;
         }
-        else if (arg[0] == '<')
+        else if (arg.compare(">") == 0)
+        {
+            isTruncated = true;
+            hasOutputFileArg = true;
+        }
+        else if (arg.compare("<") == 0)
         {
             // This is the indicator that we have an input file argument
             hasInputFileArg = true;
-            inputFile = arg.substr(1, arg.size() - 2);
         }
         else if (hasInputFileArg == true)
         {
-            // An output file will follow an input file if it exists, so we just look for the set value
-            outputFile = arg;
+            // The input file argument will always follow the < command
+            inputFile = arg;
             hasInputFileArg = false;
+        }
+        else if (hasOutputFileArg == true)
+        {
+            // The output file argument will always follow the > or >> command
+            outputFile = arg;
+            hasOutputFileArg = false;
         }
         else
         {

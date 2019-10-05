@@ -7,7 +7,7 @@
 #include <sys/wait.h>
 #include "executor.h"
 
-int8_t Executor::executeBatchProcess(std::vector<Process> newProcessVector)
+int8_t Executor::executeBatchProcess(std::vector<std::vector<Process>> newProcessVector)
 {
     // Check to make sure there are actually new processes to execute
     if (newProcessVector.size()  == 0)
@@ -20,15 +20,25 @@ int8_t Executor::executeBatchProcess(std::vector<Process> newProcessVector)
     for(; processVectorIterator != newProcessVector.end(); ++processVectorIterator)
     {
         int processResult = 0;
-        if (processVectorIterator->getBackground() == false)
+
+        if ((*processVectorIterator).size() > 1)
         {
-            // This means we have a foreground process
-            processResult = executeForegroundProcess(*processVectorIterator);
+           processResult = executePipedProcesses(*processVectorIterator);
         }
         else
         {
-            // This is a background process
-            processResult = executeBackgroundProcess(*processVectorIterator);
+            Process individualProcess = (*processVectorIterator)[0];
+            if (individualProcess.getBackground() == false)
+            {
+                // This means we have a foreground process
+                processResult = executeForegroundProcess(individualProcess);
+            }
+            else
+            {
+                // This is a background process
+                processResult = executeBackgroundProcess(individualProcess);
+            }
+            
         }
 
         if (processResult != 0)
@@ -40,6 +50,94 @@ int8_t Executor::executeBatchProcess(std::vector<Process> newProcessVector)
 
     // Everything executed as planned, so return a 0
     return 0;
+}
+
+int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
+{
+    int numPipes = (pipedProcesses.size() - 1);
+
+    int status;
+    int i = 0;
+    pid_t pid;
+
+    int pipefds[2 * numPipes];
+
+    for(i = 0; i < (numPipes); i++)
+    {
+        if(pipe(pipefds + i*2) < 0)
+        {
+            perror("Couldn't pipe");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    int j = 0;
+    for(int processes = 0; processes < pipedProcesses.size(); processes++)
+    {
+        pid = fork();
+        if (pid == 0)
+        {
+            // Check to see if this is the last piped process or not
+            if (processes < pipedProcesses.size() - 1)
+            {
+                if (dup2(pipefds[j + 1], 0) < 0)
+                {
+                    perror("Error with dup2");
+                    exit(EXIT_FAILURE);
+                }
+            }
+
+            // If this isn't the first command and j != 2 * numPipes
+            if (j != 0)
+            {
+                if (dup2(pipefds[j - 2], 0) < 0)
+                {
+                    perror("Error with dup2");
+                    exit(EXIT_FAILURE);
+                }
+            }
+
+            for(i = 0; i < 2*numPipes; i++)
+            {
+                close(pipefds[i]);
+            }
+            
+            std::vector<std::string> args = pipedProcesses[processes].getArgs();
+            std::vector<char*> cstrings{};
+            
+            for(auto& string: args)
+            {
+                cstrings.push_back(&string.front());
+            }
+
+            // Make sure we push back a NULL to satisfy arguments for the linux comands
+            cstrings.push_back(NULL);
+
+            if (execvp(pipedProcesses[processes].getCommand().c_str(), cstrings.data()) < 0)
+            {
+                perror("Error with execvp");
+                exit(EXIT_FAILURE);
+            }
+        }
+        else if (pid < 0)
+        {
+            perror("Error forking");
+            return -1;
+        }
+
+        j += 2;
+    }
+
+    for(i = 0; i < 2 * numPipes; i++)
+    {
+        close(pipefds[i]);
+    }
+
+    for(i = 0; i < numPipes + 1; i++)
+    {
+        wait(&status);
+        return 0;
+    }
 }
 
 int8_t Executor::executeForegroundProcess(Process foregroundProcess)

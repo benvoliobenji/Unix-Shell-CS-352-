@@ -11,6 +11,7 @@
 #include <string>
 #include <limits>
 #include "executor.h"
+#include "parser.h"
 
 #include <dirent.h>
 
@@ -22,6 +23,7 @@ int main(int argc, char *argv[])
     // TODO: Place this in a separate function
     std::cout << "\033[2J\033[1;1H";
     Executor executor = Executor();
+    Parser parser = Parser();
 
     while (isRunning)
     {
@@ -41,11 +43,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            std::vector<Process> processVector;
-            std::vector<std::string> args = {};
-            Process newProcess = Process(getpid(), input, args, false);
-
-            processVector.push_back(newProcess);
+            std::vector<std::vector<Process>> processVector = parser.parseInput(input);
             executor.executeBatchProcess(processVector);
         }
     }
