@@ -163,7 +163,6 @@ int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
     for(auto childPIDIterator = child_pids.begin(); childPIDIterator != child_pids.end(); ++childPIDIterator)
     {
         waitpid(*childPIDIterator, &status, 0);
-        return 0;
     }
 
     return 0;
@@ -364,8 +363,17 @@ int8_t Executor::handleIO(Process process)
     // Now check if there is an output file
     if (process.getOuptutFile().size() > 0)
     {
-        // TODO: Change for depending on truncation or appending
-        int file = open(process.getOuptutFile().c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+        int file;
+        // Change the parameters when opening the file depending on if it's truncate or append
+        if (process.getOutputFileTruncated)
+        {
+            file = open(process.getOuptutFile().c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+        }
+        else
+        {
+            file = open(process.getOuptutFile().c_str(), O_RDWR | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR);
+        }
+        
 
         // Check to make sure the file was opened properly
         if (file < 0)
