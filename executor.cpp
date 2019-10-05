@@ -193,13 +193,13 @@ int8_t Executor::executeProcess(Process process)
         }
 
         std::vector<char*> cstrings{};
-        // Make sure to push back the command first
-        char* command = new char[process.getCommand().size() + 1];
-        std::copy(process.getCommand().begin(), process.getCommand().end(), command);
+        // // Make sure to push back the command first
+        // char* command = new char[process.getCommand().size() + 1];
+        // std::copy(process.getCommand().begin(), process.getCommand().end(), command);
 
         // strcpy(command, process.getCommand().c_str());
 
-        cstrings.push_back(command);
+        // cstrings.push_back(command);
         
         // Needed for a conversion from a vector of strings to a char** for execvp
         for(auto& string: args)
