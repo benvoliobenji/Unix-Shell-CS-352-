@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 
     while (isRunning)
     {
-        std::cout << getcwd(NULL, 0)  << "/myshell" << "$ " << std::flush;
+        std::cout << getcwd(NULL, 0)  << "$ " << std::flush;
         std::string input;
         std::getline(std::cin, input);
 

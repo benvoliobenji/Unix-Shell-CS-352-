@@ -23,6 +23,7 @@ class Process
         bool isBackground;
         std::string inputFile = "";
         std::string outputFile = "";
+        bool outputFileTruncated = true;
 
 
     public:
@@ -60,6 +61,8 @@ class Process
 
         int8_t setOutputFile(std::string const newOutputFile) { outputFile = newOutputFile; return 0; }
 
+        int8_t setOutputFileTruncated(bool const isTruncated) { outputFileTruncated = isTruncated; return 0;}
+
         const pid_t getProcessID() { return pid; }
 
         const std::string getCommand() { return command; }
@@ -71,4 +74,6 @@ class Process
         const std::string getInputFile() { return inputFile; }
 
         const std::string getOuptutFile() { return outputFile; }
+
+        const bool getOutputFileTruncated() { return outputFileTruncated; }
 };
