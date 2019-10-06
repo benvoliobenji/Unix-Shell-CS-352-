@@ -36,3 +36,9 @@
 
 # The vscode config folder
 /.vscode
+
+# The project foldter
+/Benjamin_Vogel_Project1
+
+# ZIP Files
+*.ZIP
