@@ -236,7 +236,7 @@ int8_t Executor::executeForegroundProcess(Process foregroundProcess)
 
         if (status != 0)
         {
-            perror("Child Process");
+            // perror("Child Process");
             return -1;
         }
         else
@@ -316,10 +316,11 @@ int8_t Executor::executeProcess(Process process)
     }
     else if (process.getCommand().compare("help") == 0)
     {
-        // Since help is actually help | more, we need to execute a piped process
+        // Since help is actually man help | more, we need to execute a piped process
+        // We are supposed to display the user manual, so man is needed
         std::vector<Process> helpCommand;
-        std::vector<std::string> helpArgs = {"help"};
-        Process helpProcess(getpid(), "help", helpArgs, false);
+        std::vector<std::string> helpArgs = {"man", "help"};
+        Process helpProcess(getpid(), "man", helpArgs, false);
 
         std::vector<std::string> moreArgs = {"more"};
         Process moreProcess(getpid(), "more", moreArgs, false);

@@ -48,11 +48,7 @@ int main(int argc, char *argv[])
             else
             {
                 std::vector<std::vector<Process>> processVector = parser.parseInput(input);
-                int status = executor.executeBatchProcess(processVector);
-                if (status != 0)
-                {
-                    perror("Executor");
-                }
+                executor.executeBatchProcess(processVector);
             }
         }
     }
