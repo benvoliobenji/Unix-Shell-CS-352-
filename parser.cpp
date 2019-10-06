@@ -1,8 +1,13 @@
+// Author: Benjamin Vogel
 #include <sstream>
 #include <iostream>
 #include <unistd.h>
 #include "trim.h"
 #include "parser.h"
+
+/**
+ * This file contains the implementation of the Parser methods defined in "parser.h"
+ **/
 
 std::vector<std::vector<Process>> Parser::parseInput(std::string inputLine)
 {

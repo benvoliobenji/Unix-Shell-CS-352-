@@ -1,7 +1,12 @@
+// Author: Benjamin Vogel
 #include <iostream>
 #include <algorithm>
 
 #include "trim.h"
+
+/**
+ * This file contains the implementation of the methods described in "trim.h"
+ **/
 
 const std::string WHITESPACE = " \n\r\t\f\v";
 

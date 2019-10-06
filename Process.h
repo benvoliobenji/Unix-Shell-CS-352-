@@ -1,3 +1,4 @@
+// Author: Benjamin Vogel
 #pragma once
 
 #include <stdint.h>
@@ -8,10 +9,9 @@
 
 /**
  * The abstract class to be used by most of the commands in the shell (outside of a few that directly affect the shell)
- * Contains several methods that will be used to get and set information about each process as well as pure virtual function
- * that will be overridden which will contain the instructions on how to execute that function.
+ * Contains several methods that will be used to get and set information about each process.
  * 
- * This is done to allow for easy extendability and ease of programming for the execution of the processes in the shell.
+ * This is done to make it easy to hold all the information the Executor will need to execute a process.
  *  
  **/
 class Process

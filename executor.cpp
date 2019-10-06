@@ -1,3 +1,4 @@
+// Author: Benjamin Vogel
 #include <cstring>
 #include <unistd.h>
 #include <stdlib.h>
@@ -6,6 +7,10 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "executor.h"
+
+/**
+ * This file contains the implementation of the Executor methods decribed in "executor.h"
+ **/
 
 int8_t Executor::executeBatchProcess(std::vector<std::vector<Process>> newProcessVector)
 {
@@ -23,13 +28,17 @@ int8_t Executor::executeBatchProcess(std::vector<std::vector<Process>> newProces
 
         if ((*processVectorIterator).size() > 1)
         {
-           processResult = executePipedProcesses(*processVectorIterator);
+            // If we have a vector size of more than one, that means the parser found a piped process
+            processResult = executePipedProcesses(*processVectorIterator);
         }
         else
         {
             Process individualProcess = (*processVectorIterator)[0];
+
             if (individualProcess.getCommand().compare("cd") == 0)
             {
+                // "cd" directly affects the parent process, so do it here rather than in a child process
+
                 std::vector<std::string> args = individualProcess.getArgs();
                 // Since we know it's only one argument which is the path to change the directory to,
                 // we can just grab that sole argument
@@ -37,10 +46,8 @@ int8_t Executor::executeBatchProcess(std::vector<std::vector<Process>> newProces
                 if (args.size() == 1)
                 {
                     // We didn't have any arguments, so just print out the current directory
-                    char* directory = (char*) malloc(256);
-                    getcwd(directory, 256);
-                    std::cout << directory << std::endl;
-                    return 0;
+                    perror("No directory listed");
+                    return -1;
                 }
 
 
@@ -92,8 +99,10 @@ int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
     int i = 0;
     pid_t pid;
 
+    // Our array of pipes
     int pipefds[2 * numPipes];
 
+    // Create pipes
     for(i = 0; i < (numPipes); i++)
     {
         if(pipe(pipefds + i*2) < 0)
@@ -103,8 +112,11 @@ int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
         }
     }
 
+    // Create the pipe index and a vector of child pids
     int j = 0;
     std::vector<pid_t> child_pids;
+
+    // Iterate through each process
     for(size_t processes = 0; processes < pipedProcesses.size(); processes++)
     {
         pid = fork();
@@ -122,9 +134,10 @@ int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
                 handleIO(pipedProcesses[0]);
             }
 
-            // If this isn't the first command and j != 2 * numPipes
+            // If this isn't the first command
             if (j != 0)
             {
+                // Change the input to be from the pipe
                 if (dup2(pipefds[(j - 1) * 2], STDIN_FILENO) < 0)
                 {
                     perror("Error with dup2");
@@ -135,6 +148,7 @@ int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
             // Check to see if this is the last piped process or not
             if (processes < pipedProcesses.size() - 1)
             {
+                // Change the standard out to be the pipe
                 if (dup2(pipefds[(j * 2) + 1], STDOUT_FILENO) < 0)
                 {
                     perror("Error with dup2");
@@ -174,23 +188,27 @@ int8_t Executor::executePipedProcesses(std::vector<Process> pipedProcesses)
         }
         else if (pid > 0)
         {
+            // The parent needs to keep track of all the child pids for waiting
             child_pids.push_back(pid);
         }
 
+        // Increment the pipe index
         j++;
     }
 
+    // Close all the pipes completely
     for(i = 0; i < 2 * numPipes; i++)
     {
         close(pipefds[i]);
     }
 
+    // Wait for each child to exit
     for(auto childPIDIterator = child_pids.begin(); childPIDIterator != child_pids.end(); ++childPIDIterator)
     {
         waitpid(*childPIDIterator, &status, 0);
     }
 
-    return 0;
+    return status;
 }
 
 int8_t Executor::executeForegroundProcess(Process foregroundProcess)
@@ -267,7 +285,7 @@ int8_t Executor::executeProcess(Process process)
     // Now we execute the process
     if (process.getCommand().compare("clr") == 0)
     {
-        execlp("clear", "clear", NULL);
+        return execlp("clear", "clear", NULL);
     }
     else if (process.getCommand().compare("dir") == 0)
     {
@@ -290,7 +308,7 @@ int8_t Executor::executeProcess(Process process)
             cstrings.push_back(&string.front());
         }
 
-        execvp("ls", cstrings.data());
+        return execvp("ls", cstrings.data());
     }
     else if (process.getCommand().compare("environ") == 0)
     {
@@ -298,6 +316,7 @@ int8_t Executor::executeProcess(Process process)
     }
     else if (process.getCommand().compare("help") == 0)
     {
+        // Since help is actually help | more, we need to execute a piped process
         std::vector<Process> helpCommand;
         std::vector<std::string> helpArgs = {"help"};
         Process helpProcess(getpid(), "help", helpArgs, false);
@@ -308,7 +327,7 @@ int8_t Executor::executeProcess(Process process)
         helpCommand.push_back(helpProcess);
         helpCommand.push_back(moreProcess);
 
-        executePipedProcesses(helpCommand);
+        return executePipedProcesses(helpCommand);
     }
     else
     {
@@ -331,7 +350,7 @@ int8_t Executor::executeProcess(Process process)
         cstrings.push_back(NULL);
 
         // Execute the process
-        execvp(process.getCommand().c_str(), cstrings.data());   
+        return execvp(process.getCommand().c_str(), cstrings.data());   
     }
 
     return 0;

@@ -12,12 +12,18 @@
 #include "executor.h"
 #include "parser.h"
 
+/**
+ * This file contains the main shell method
+ **/
+
 int main(int argc, char *argv[])
 {
     bool isRunning = true;
 
     // Clear the screen before printing out the program
     std::cout << "\033[2J\033[1;1H";
+
+    // Create new Executor and Parser objects
     Executor executor = Executor();
     Parser parser = Parser();
 
@@ -42,12 +48,17 @@ int main(int argc, char *argv[])
             else
             {
                 std::vector<std::vector<Process>> processVector = parser.parseInput(input);
-                executor.executeBatchProcess(processVector);
+                int status = executor.executeBatchProcess(processVector);
+                if (status != 0)
+                {
+                    perror("Executor");
+                }
             }
         }
     }
     else if (argc == 2)
     {
+        // We have a file to read from
         std::ifstream file;
         file.open(argv[1]);
         std::string line;
@@ -70,7 +81,4 @@ int main(int argc, char *argv[])
             }
         }
     }
-
-    // Clear the screen before exiting the program
-    // std::cout << "\033[2J\033[1;1H";
 }
