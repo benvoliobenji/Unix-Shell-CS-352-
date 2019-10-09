@@ -409,6 +409,7 @@ int8_t Executor::handleIO(Process process)
         {
             // Change the stdout to this file
             dup2(file, STDOUT_FILENO);
+            dup2(file, STDERR_FILENO);
 
             // Close the file
             close(file);
