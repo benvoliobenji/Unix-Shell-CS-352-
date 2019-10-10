@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
         // There is no file to read from, so just act as a normal shell
         while (isRunning)
         {
-            std::cout << getcwd(NULL, 0)  << "$ " << std::flush;
+            std::cout << getcwd(NULL, 0)  <<  "/myshell" << "$ " << std::flush;
             std::string input;
             std::getline(std::cin, input);
 
